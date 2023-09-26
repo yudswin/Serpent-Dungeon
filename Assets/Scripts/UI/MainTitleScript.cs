@@ -7,9 +7,12 @@ using UnityEngine;
 public class MainTitleScript : MonoBehaviour
 {
     [SerializeField] private GameObject mainTitle;
+
     [SerializeField] private GameObject nameInputTitle;
     [SerializeField] private TMP_InputField nameInput;
-    //[SerializeField] private RectTransform choseBonusTitle;
+
+    [SerializeField] private GameObject chooseBonusTitle;
+    [SerializeField] private GameObject bonusDescription;
 
     private float _timeInterval = 0.2f;
     private float _timeSinceLastInterval = 0f;
@@ -39,18 +42,35 @@ public class MainTitleScript : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Return))
             {
                 mainTitle.SetActive(false);
-                ActiveNextScene();
+                ActiveNameInputTitle();
             }
 
             if (Input.GetKeyDown(KeyCode.Escape))
                 Environment.Exit(0);
         }
+
+        //Name Input
+        if(nameInputTitle.activeSelf)
+        {
+            if(GameManager.playerName != null)
+            {
+                nameInputTitle.SetActive(false);
+                ActiveBonusTitle();
+            }
+        }
+
     }
 
-    private void ActiveNextScene()
+    private void ActiveNameInputTitle()
     {
         nameInputTitle.SetActive(true);
         nameInput.Select();
+    }
+
+    private void ActiveBonusTitle()
+    {
+        chooseBonusTitle.SetActive(true);
+        bonusDescription.SetActive(true);
     }
 
     void SetColorRepeat(bool type)

@@ -8,18 +8,18 @@ public class InputFieldGrabber : MonoBehaviour
     [Header("The value from the input field")]
     [SerializeField] private string inputText;
 
-    [Header("Reaction to the player")]
-    [SerializeField] private GameObject reactionGroup;
-    [SerializeField] private TMP_Text reactionTextBox;
-
     public void GrabFromInputField(string input)
     {
-        inputText = input;
-        DisplayReactionToInput();
+        if (input == null)
+        {
+            inputText = "Name";
+        } 
+        else
+        {
+            inputText = input;
+        } 
+
+        GameManager.playerName = inputText;
     }
 
-    private void DisplayReactionToInput()
-    {
-        //show reaction
-    }
 }
