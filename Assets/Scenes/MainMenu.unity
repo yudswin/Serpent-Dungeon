@@ -1273,6 +1273,7 @@ GameObject:
   - component: {fileID: 1037368807}
   - component: {fileID: 1037368811}
   - component: {fileID: 1037368812}
+  - component: {fileID: 1037368813}
   m_Layer: 5
   m_Name: Main UI Canvas
   m_TagString: Untagged
@@ -1383,7 +1384,6 @@ MonoBehaviour:
   nameInput: {fileID: 651312425}
   chooseBonusTitle: {fileID: 277848394}
   bonusDescription: {fileID: 571784790}
-  flagGO: 0
 --- !u!114 &1037368812
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1401,6 +1401,27 @@ MonoBehaviour:
   - {fileID: 1622823536}
   - {fileID: 1786995316}
   descriptionText: {fileID: 571784792}
+--- !u!114 &1037368813
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1037368806}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27ca6957a6a76184184e4c970988c598, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  soundAudioClipArray:
+  - sound: 11
+    audioClip: {fileID: 8300000, guid: 81f151f91ded8334ea18067847ab53e4, type: 3}
+  - sound: 12
+    audioClip: {fileID: 8300000, guid: efd918c514685d84fa76a4b703b72754, type: 3}
+  - sound: 13
+    audioClip: {fileID: 8300000, guid: ca9481958bfb90748a2cd58834636815, type: 3}
+  - sound: 4
+    audioClip: {fileID: 8300000, guid: 72bce0e96951e8a4e88c491e92e90ab7, type: 3}
 --- !u!1 &1211863123
 GameObject:
   m_ObjectHideFlags: 0

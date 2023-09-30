@@ -1,70 +1,134 @@
+using JetBrains.Annotations;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Tilemaps;
+
+public enum SpawnZone
+{
+    TOP,
+    MID,
+    BOT
+}
 
 public class FruitSpawner : MonoBehaviour
 {
-    [SerializeField] private List<FruitType> fruits;
+    [SerializeField] private List<FruitType> fruitTypes;
     [SerializeField] private GameObject fruitPrefab;
+    [SerializeField] private TilemapCollider2D ground;
+
+    public int initFruitSpawn = 2;
+    public bool floating;
+    private Snake _snake;
+    private List<GameObject> _fruitsOnBoard = new List<GameObject>();
+    private List<int> _fruitIndex = new List<int>();
 
 
-    // Time interval between fruit spawns
-    public float spawnInterval = 2f; 
-    private float timeSinceLastSpawn = 0f;
-
-    private float _spawnRadius;
-    private Vector3 _spawnPoint;
-
-
-    private void Awake()
+    private void OnEnable()
     {
-        _spawnRadius = 6.0f;
-        _spawnPoint = new Vector3(7.5f, 7.5f, 0);
+        _snake = FindObjectOfType<Snake>();
+        floating = false;
     }
 
-    private void Update()
+    public void SpawnAllFruit()
     {
-        timeSinceLastSpawn += Time.deltaTime;
-
-        if (timeSinceLastSpawn >= spawnInterval)
+        float deleyEach = 1.0f / initFruitSpawn;
+        for (int i = 0; i < initFruitSpawn; i++)
         {
-            SpawnFruit();
-            SpawnFruit();
-            SpawnFruit();
-            timeSinceLastSpawn = 0f;
+            StartCoroutine(SpawnAfterDelay(deleyEach * (i + 1)));
         }
     }
 
-
-    private void SpawnFruit()
+    private IEnumerator SpawnAfterDelay(float delay)
     {
-        if (fruits.Count == 0)
+        yield return new WaitForSeconds(delay);
+        int enumLength = System.Enum.GetValues(typeof(SpawnZone)).Length;
+        int randomIndex = Random.Range(0, enumLength);
+        GetRandomSpawnPosition((SpawnZone)randomIndex);
+       
+    }
+
+
+    private void SpawnFruit(int x, int y)
+    {
+        if (fruitTypes.Count == 0)
         {
             Debug.Log("Fruit not set in the inspector.");
         }
 
-        int randomIndex = Random.Range(0, fruits.Count);
-        FruitType selectedFruit = fruits[randomIndex];
+        int randomIndex = Random.Range(0, fruitTypes.Count);
+        FruitType selectedFruit = fruitTypes[randomIndex];
         GameObject newFruit = Instantiate(fruitPrefab);
 
-        // Set fruit's component
+            // Set fruit's component
         Fruit fruitComponent = newFruit.AddComponent<Fruit>();
         fruitComponent.fruitType = selectedFruit;
+        if (floating) fruitComponent.SetFruitFloating(true);
+        else if (!floating) fruitComponent.SetFruitFloating(false);
 
-        // Set fruit's sprite
+            // Set fruit's sprite
         SpriteRenderer spriteRenderer = newFruit.GetComponent<SpriteRenderer>();
         spriteRenderer.sprite = selectedFruit.fruitSprite;
-        spriteRenderer.sortingOrder = 1;
+        spriteRenderer.sortingOrder = 3;
 
-        // Set fruit's position
-        newFruit.transform.position = GetRandomSpawnPosition();
-
+            // Set fruit's position
+        newFruit.transform.position = new Vector2(x,y);
+        _fruitsOnBoard.Add(newFruit);
+        _fruitIndex.Add(randomIndex);
     }
 
-    private Vector3 GetRandomSpawnPosition()
+    public void DestroyAllFruit()
     {
-        float x = Random.Range(_spawnPoint.x - _spawnRadius, _spawnPoint.x + _spawnRadius);
-        float y = Random.Range(_spawnPoint.y - _spawnRadius, _spawnPoint.y + _spawnRadius);
-        return new Vector3(x, y, 0.0f);
+        foreach (GameObject fruit in _fruitsOnBoard)
+        {
+            Destroy(fruit.gameObject);
+            _fruitIndex.Clear();
+        }
+    }
+
+    private void GetRandomSpawnPosition(SpawnZone zone) 
+    {
+        float boundXMax = 15.5f;
+        float boundXMin = 0.5f;
+        float boundYMax = 15.5f;
+        float boundYMin = 0.5f;
+
+        switch (zone)
+        {
+            case SpawnZone.TOP:
+                boundXMax = 15.5f;
+                boundXMin = 11.0f;
+                break;
+            case SpawnZone.MID:
+                boundXMax = 11.0f;
+                boundXMin = 5.0f;
+                break;
+            case SpawnZone.BOT:
+                boundXMax = 5.0f;
+                boundXMin = 0.5f;
+                break;
+        }
+
+        int x = Mathf.RoundToInt(Random.Range(boundXMax, boundXMin));
+        int y = Mathf.RoundToInt(Random.Range(boundYMax,boundYMin));
+
+        while (_snake.Occupies(x,y))
+        {
+            x++;
+
+            if (x > boundXMax)
+            {
+                x = Mathf.RoundToInt(boundXMin);
+                y++;
+
+                if (y > boundYMax)
+                {
+                    y = Mathf.RoundToInt(boundYMin);
+                }
+            }
+        }
+
+        SpawnFruit(x, y);
     }
 }

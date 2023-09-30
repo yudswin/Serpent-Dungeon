@@ -7,6 +7,10 @@ TagManager:
   - Wall
   - Fruit
   - Body
+  - Obstacle
+  - Spot
+  - Logic
+  - Coin
   layers:
   - Default
   - TransparentFX

@@ -8,4 +8,5 @@ public class FruitType : ScriptableObject
     public string fruitName;
     public int fruitValue;
     public Sprite fruitSprite;
+    public int stacks;
 }

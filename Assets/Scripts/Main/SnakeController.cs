@@ -4,21 +4,27 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEngine.InputSystem;
 using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
+
 
 public class SnakeController : MonoBehaviour
 {
+    // Grid Setup
     [SerializeField] private Tilemap groundTileMap;
     [SerializeField] private Tilemap wallTileMap;
     [SerializeField] private Vector3Int gridPosition;
-
-    private float _gridMoveTimer;
-    private float _gridMoveTimerMax;
     private Vector2 _gridPosition;
     private Vector2 _gridMoveDirection;
 
-    // Snake part
-    private List<GameObject> _childList;
-    [SerializeField] private GameObject bodyPrefab;
+    // Time - Speed
+    private float nextUpdate;
+    [SerializeField] private float speed;
+    [SerializeField] private float speedMultiplier;
+
+    // Segments - Parts
+    private List<Transform> _parts = new List<Transform>();
+    [SerializeField] private Transform partPrefab;
+    [SerializeField] private int initialSize = 4;
 
     // Controller - Movement
     private PlayerInput _controls;
@@ -26,25 +32,15 @@ public class SnakeController : MonoBehaviour
     private void Start()
     {
         _controls.InGame.Movement.performed += ctx => OnMovement(ctx.ReadValue<Vector2>());
-
-        // Snake size setup
-        _childList = new List<GameObject>();
+        ResetState();
     }
 
     private void Awake()
     {
         // Control enable
         _controls = new PlayerInput();
-
-        // Initial setup (Snake's start position)
-        _gridPosition = transform.position;
-        _gridMoveDirection = Vector2.right;
-
-        // Timer setup (Snake's speed)
-        _gridMoveTimerMax = 0.2f;
-        _gridMoveTimer = _gridMoveTimerMax;
-
-        
+        speed = 5.0f;
+        speedMultiplier = 1.0f;
     }
 
     private void OnEnable()
@@ -60,22 +56,23 @@ public class SnakeController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (Time.time < nextUpdate) return;
+
+        for (int i = _parts.Count - 1; i > 0; i--)
+        {
+            _parts[i].transform.position = _parts[i - 1].transform.position;
+        }
+
         GridMovement();
-        SetChildrenTarget();
+
+        nextUpdate = Time.time + (1f / (speed * speedMultiplier));
     }
 
     private void GridMovement()
     {
         if (CanMove(_gridMoveDirection))
         {
-            _gridMoveTimer += Time.fixedDeltaTime;
-
-            if (_gridMoveTimer >= _gridMoveTimerMax)
-            {
-                _gridPosition += _gridMoveDirection;
-                _gridMoveTimer -= _gridMoveTimerMax;
-            }
-
+            _gridPosition += _gridMoveDirection;
             transform.position = new Vector3(_gridPosition.x, _gridPosition.y);
             transform.eulerAngles = new Vector3(0, 0, GetAngleFromVector(_gridMoveDirection) - 90);
         }
@@ -107,40 +104,43 @@ public class SnakeController : MonoBehaviour
         return n;
     }
 
-    private void SnakeGrow()
+
+    private void Grow()
     {
-        GameObject part = Instantiate(bodyPrefab, transform.position, Quaternion.identity);
-        part.GetComponent<BoxCollider2D>().enabled = false;
-        StartCoroutine(ActiveBodyCollider(part));
-        part.GetComponent<SnakeBody>().WaitHeadUpdateCycles(_childList.Count);
-        _childList.Add(part);
+        Transform segment = Instantiate(partPrefab);
+        segment.position = _parts[_parts.Count - 1].position;
+        _parts.Add(segment);
     }
 
-    private void SetChildrenTarget()
+
+    public void ResetState()
     {
-        if (_childList.Count > 0)
+
+        // Initial setup (Snake's start position)
+        _gridPosition = transform.position;
+        _gridMoveDirection = Vector2.right;
+
+        for (int i = 1; i < _parts.Count; i++)
         {
-            _childList[0].GetComponent<SnakeBody>().SetTargetPosition(transform.position);
+            Destroy(_parts[i].gameObject);
+        }
 
+        // Clear the list but add back this as the head
+        _parts.Clear();
+        _parts.Add(transform);
 
-            for (int index = _childList.Count - 1; index > 0; index--)
-            {
-                _childList[index].GetComponent<SnakeBody>().SetTargetPosition(_childList[index - 1].transform.position);
-            }
-        } 
-    }
-
-    IEnumerator ActiveBodyCollider(GameObject obj)
-    {
-        yield return new WaitForSeconds(0.5f);
-        obj.GetComponent<BoxCollider2D>().enabled = true;
+        // -1 since the head is already in the list
+        for (int i = 0; i < initialSize - 1; i++)
+        {
+            Grow();
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Fruit"))
         {
-            SnakeGrow();
+            Grow();
         }
     }
 

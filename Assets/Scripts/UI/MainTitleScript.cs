@@ -7,22 +7,22 @@ using UnityEngine;
 public class MainTitleScript : MonoBehaviour
 {
     [SerializeField] private GameObject mainTitle;
-
     [SerializeField] private GameObject nameInputTitle;
     [SerializeField] private TMP_InputField nameInput;
-
     [SerializeField] private GameObject chooseBonusTitle;
     [SerializeField] private GameObject bonusDescription;
 
     private float _timeInterval = 0.2f;
     private float _timeSinceLastInterval = 0f;
     private bool flag;
-    public bool flagGO;
+    private bool flagInput = false;
 
+    private SoundManager _sound;
 
     private void Awake()
     {
         flag = true;
+        _sound = GetComponent<SoundManager>();
     }
 
     void Update()
@@ -41,8 +41,8 @@ public class MainTitleScript : MonoBehaviour
 
             if (Input.GetKeyDown(KeyCode.Return))
             {
-                mainTitle.SetActive(false);
-                ActiveNameInputTitle();
+                _sound.PlaySound(Sound.TitleUI);
+                StartCoroutine(ChangeMainAfterDelay(2.0f));
             }
 
             if (Input.GetKeyDown(KeyCode.Escape))
@@ -52,13 +52,27 @@ public class MainTitleScript : MonoBehaviour
         //Name Input
         if(nameInputTitle.activeSelf)
         {
-            if(GameManager.playerName != null)
+            if(GameManager.playerName != null && Input.GetKeyDown(KeyCode.Return))
             {
-                nameInputTitle.SetActive(false);
-                ActiveBonusTitle();
+                _sound.PlaySound(Sound.EnterName);
+                StartCoroutine(ChangeNameAfterDelay(3.5f));   
             }
         }
 
+    }
+
+    private IEnumerator ChangeMainAfterDelay(float value)
+    {
+        yield return new WaitForSeconds(value);
+        mainTitle.SetActive(false);
+        ActiveNameInputTitle();
+    }
+
+    private IEnumerator ChangeNameAfterDelay(float value)
+    {
+        yield return new WaitForSeconds(value);
+        nameInputTitle.SetActive(false);
+        ActiveBonusTitle();
     }
 
     private void ActiveNameInputTitle()
@@ -76,16 +90,26 @@ public class MainTitleScript : MonoBehaviour
     void SetColorRepeat(bool type)
     {
         TextMeshProUGUI textComponent = mainTitle.GetComponent<TextMeshProUGUI>();
-        switch (type)
-        {
-            case true:
-                textComponent.color = new Color(255, 255, 255);
-                return;
-            case false:
-                textComponent.color = new Color(0, 0, 0);
-                return;
 
+        if(!flagInput)
+        {
+            switch (type)
+            {
+                case true:
+                    textComponent.color = new Color(255, 255, 255);
+                    _sound.PlaySound(Sound.Repeat);
+                    return;
+                case false:
+                    textComponent.color = new Color(0, 0, 0);
+                    return;
+
+            }
         }
+        else
+        {
+            textComponent.color = new Color(255, 255, 255);
+        }
+        
         
     }
 
